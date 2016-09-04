@@ -60,14 +60,3 @@ func getStats(cres http.ResponseWriter, req *http.Request) {
 		}
 	}()
 }
-
-// IDObject ...
-type IDObject interface {
-	GetID() string
-}
-
-// Msg ...
-type Msg struct {
-	data    []string
-	message string
-}
