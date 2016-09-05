@@ -19,7 +19,7 @@ const path = "unix:///var/run/docker.sock"
 func Start() {
 	router.HandleFunc("/hosts", getHosts)
 	router.HandleFunc("/containers", getContainers)
-	router.HandleFunc("/imagews", getImages)
+	router.HandleFunc("/images", getImages)
 	router.HandleFunc("/stats/{id}", getStats)
 	http.ListenAndServe(":8080", router)
 }
@@ -45,18 +45,20 @@ func getClient() *docker.Client {
 	return api.GetClient(path)
 }
 
-func getStats(cres http.ResponseWriter, req *http.Request) {
+func getStats(res http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	containerID := vars["id"]
 	client := getClient()
 	stats := make(chan *docker.Stats)
 	done := make(chan bool)
-	opts := docker.StatsOptions{Stream: false, ID: containerID, Stats: stats, Done: done}
+	opts := docker.StatsOptions{Stream: true, ID: containerID, Stats: stats, Done: done}
 
 	go func() {
-		err := client.Stats(opts)
-		if err != nil {
-
-		}
+		client.Stats(opts)
 	}()
+
+	containerStats := <-stats
+	done <- true
+	output, _ := json.Marshal(containerStats)
+	res.Write(output)
 }
